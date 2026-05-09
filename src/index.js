@@ -69,8 +69,24 @@ app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
 
 // ── Global Error Handler ───────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal server error' });
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  // Log the full error server-side for debugging
+  console.error('❌ Global Error:', err);
+
+  const response = {
+    error: 'Internal server error',
+    path: req.path
+  };
+
+  // Only expose details in development
+  if (!isProduction) {
+    response.message = err.message;
+    response.detail = err.detail || null;
+    response.stack = err.stack;
+  }
+
+  res.status(500).json(response);
 });
 
 // ── Start Server ───────────────────────────────────────────
